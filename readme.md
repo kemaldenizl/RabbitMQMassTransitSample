@@ -38,21 +38,3 @@ OrderApi: The producer service that creates orders and publishes OrderCreatedEve
 EmailWorker: The consumer service that listens for events and handles email processing logic (simulated).
 
 SharedModels: Contains the shared contracts and events used by both services.
-
-🚀 Getting Started
-Clone the repository:
-
-Bash
-git clone https://github.com/yourusername/rabbitmq-masstransit-sample.git
-Run RabbitMQ:
-Ensure you have RabbitMQ running locally or via Docker:
-
-Bash
-docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
-Update Database:
-Run migrations for both OrderApi and EmailWorker:
-
-Bash
-dotnet ef database update
-Run the Applications:
-Start both the API and the Worker service to see the messaging in action.
