@@ -1,8 +1,10 @@
 using MassTransit;
 using EmailWorker;
+using Microsoft.EntityFrameworkCore;
 
 var builder = Host.CreateApplicationBuilder(args);
 
+builder.Services.AddDbContext<EmailDbContext>(opt => opt.UseSqlite(builder.Configuration.GetConnectionString("BaseConnection")));
 
 builder.Services.AddMassTransit(x =>
 {
