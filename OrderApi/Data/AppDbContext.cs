@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using MassTransit;
 
 public class AppDbContext : DbContext
 {
@@ -8,4 +9,12 @@ public class AppDbContext : DbContext
 
     public DbSet<Order> Orders { get; set; } = null!;
 
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.AddInboxStateEntity();
+        modelBuilder.AddOutboxMessageEntity();
+        modelBuilder.AddOutboxStateEntity();
+    }
 }

@@ -8,6 +8,12 @@ builder.Services.AddDbContext<AppDbContext>(opt => opt.UseSqlite(builder.Configu
 
 builder.Services.AddMassTransit(x =>
 {
+    x.AddEntityFrameworkOutbox<AppDbContext>(o =>
+    {
+        o.UseSqlite();
+        o.UseBusOutbox();
+    });
+
     x.UsingRabbitMq((context, cfg) =>
     {
         cfg.Host("localhost", "/", h =>
@@ -15,6 +21,8 @@ builder.Services.AddMassTransit(x =>
             h.Username("guest");
             h.Password("guest");
         });
+
+        cfg.ConfigureEndpoints(context);
     });
 });
 
@@ -29,12 +37,22 @@ app.MapPost("/api/orders", async (IPublishEndpoint publishEndpoint, AppDbContext
         ProductName = order.ProductName
     };
 
-    await context.Orders.AddAsync(order);
-    await context.SaveChangesAsync();
-    
-    await publishEndpoint.Publish(orderEvent);
+    using var transaction = await context.Database.BeginTransactionAsync();
+    try{
+        await context.Orders.AddAsync(order);
 
-    return Results.Created($"/api/orders/{order.Id}", order);
+        await publishEndpoint.Publish(orderEvent);
+
+        await context.SaveChangesAsync();
+
+        await transaction.CommitAsync();
+
+        return Results.Created($"/api/orders/{order.Id}", order);
+    }
+    catch (Exception exception){
+        await transaction.RollbackAsync();
+        return Results.Problem("Sipariş işlenirken bir hata oluştu: " + exception.Message);
+    }
 });
 
 app.MapGet("/api/orders/{id}", async (AppDbContext context, int id) =>
